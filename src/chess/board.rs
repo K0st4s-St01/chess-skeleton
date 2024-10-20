@@ -2,6 +2,8 @@ use std::path::is_separator;
 
 use rand::seq::SliceRandom;
 
+
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Piece_enum {
     king,
@@ -18,8 +20,8 @@ pub enum Color {
 }
 #[derive(Clone, Copy, PartialEq)]
 pub struct Piece {
-    piece: Piece_enum,
-    color: Color,
+    pub piece: Piece_enum,
+    pub color: Color,
 }
 impl Piece {
     fn new(p: Piece_enum, color: Color) -> Piece {
@@ -30,7 +32,7 @@ impl Piece {
     }
 }
 pub struct Board {
-    pieces: [[Option<Piece>; 8]; 8],
+    pub pieces: [[Option<Piece>; 8]; 8],
 }
 impl Board {
     pub fn new() -> Board {
@@ -61,224 +63,188 @@ impl Board {
         Board { pieces: pieces }
     }
 
-    pub fn select(&mut self, x: usize, y: usize) -> Option<Vec<[usize; 2]>> {
+    pub fn select(&mut self, x: i32, y: i32) -> Option<Vec<[i32; 2]>> {
         if x < 8 && y < 8 {
-            if self.pieces[x][y] == None {
+            if self.pieces[x as usize][y as usize] == None {
                 return None;
             } else {
-                let mut v = Vec::<[usize; 2]>::new();
-                match self.pieces[x][y].unwrap().piece {
+                let mut v:Vec<[i32;2]> = Vec::<[i32;2]>::new();
+                let selected_piece = self.pieces[x as usize][y as usize].unwrap();
+
+                match selected_piece.piece{
                     Piece_enum::king => {
-                        for i in -1..=1 {
-                            for j in -1..=1 {
-                                let current =
-                                    self.pieces[(x as i32 + i) as usize][(y as i32 + j) as usize];
-                                if Board::in_bounds(x as i32 + i, y as i32 + j) {
-                                    if current == None
-                                        || (current != None
-                                            && current.unwrap().color
-                                                != self.pieces[x][y].unwrap().color)
-                                    {
-                                        v.push([(x as i32 + i) as usize, (y as i32 + j) as usize]);
+                        for i in -1..=1{
+                            for j in -1..=1{
+                                if Board::in_bounds(x + i, y + j){
+                                    let square = self.pieces[(x+i) as usize][(y+j) as usize];
+                                    if square == None 
+                                    || (square !=None && square.unwrap().color!= selected_piece.color)  {
+                                        v.push([x+i,y+i]);
                                     }
                                 }
                             }
                         }
-                        return Some(v);
-                    }
-                    Piece_enum::queen => todo!(),
+                    },
                     Piece_enum::bishop => {
-                        let mut v = Vec::<[usize; 2]>::new();
-                        for i in x..=10 {
-                            if Board::in_bounds((x + i) as i32, (y + i) as i32) {
-                                let current = self.pieces[x + i][y + i];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x + i, y + i]);
-                                }
-                            }
-                            if Board::in_bounds((x + i) as i32, (y - i) as i32) {
-                                let current = self.pieces[x + i][y - i];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x + i, y - i]);
-                                }
-                            }
-                            if Board::in_bounds((x - i) as i32, (y + i) as i32) {
-                                let current = self.pieces[x - i][y + i];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x - i, y + i]);
-                                }
-                            }
-                            if Board::in_bounds((x - i) as i32, (y - i) as i32) {
-                                let current = self.pieces[x - i][y - i];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x - i, y - i]);
-                                }
-                            }
-                        }
+                        for j in [[1,1],[1,-1],[-1,1],[-1,-1]]{
+                            for i in 1..10{
+                                if Board::in_bounds(x + i*j[0], y + i*j[1]){
+                                    let square = self.pieces[(x+i*j[0]) as usize][(y+i*j[1]) as usize];
+                                    if square == None {
+                                        v.push([x+i*j[0],y+i*j[1]]);
+                                    }
+                                    if square != None{
+                                        if square.unwrap().color == selected_piece.color{
+                                            break;
+                                        }else{
+                                            v.push([x+i*j[0],y+i*j[1]]);
+                                            break;
+                                        }
 
-                        return Some(v);
+                                    }
+                                }
+                            }
                     }
+                    },
                     Piece_enum::knight => {
-                        let mut v = Vec::<[usize; 2]>::new();
-                        for i in [
-                            [2, 1],
-                            [2, -1],
-                            [1, 2],
-                            [-1, 2],
-                            [-1, -2],
-                            [1, -2],
-                            [-2, -1],
-                            [-2, 1],
-                        ] {
-                            if Board::in_bounds(x as i32 + i[0], y as i32 + i[1]) {
-                                let current = self.pieces[(x as i32 + i[0]) as usize]
-                                    [(y as i32 + i[1]) as usize];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([
-                                        (x as i32 + i[0]) as usize,
-                                        (y as i32 + i[1]) as usize,
-                                    ]);
+                        for j in [[2,1],[1,2]]{
+                            for i in [[1,1],[1,-1],[-1,1],[-1,-1]]{
+                                let square_x = x + j[0]*i[0];
+                                let square_y = y+j[1]*i[1];
+                                if Board::in_bounds(square_x, square_y){
+                                    let square = self.pieces[square_x as usize][square_y as usize];
+                                    if square == None{
+                                        v.push([square_x,square_y]);
+                                    }
                                 }
                             }
                         }
-                        return Some(v);
+                    },
+                    Piece_enum::rook=> {
+                        for j in [[1,0],[-1,0],[0,1],[0,-1]]{
+                            for i in 0..10{
+                                if Board::in_bounds(x + i*j[0], y + i*j[1]){
+                                    let square = self.pieces[(x+i*j[0]) as usize][(y+i*j[1]) as usize];
+                                    if square == None {
+                                        v.push([x+i*j[0],y+i*j[1]]);
+                                    }
+                                    if square != None{
+                                        if square.unwrap().color == selected_piece.color{
+                                            break;
+                                        }else{
+                                            v.push([x+i*j[0],y+i*j[1]]);
+                                            break;
+                                        }
+
+                                    }
+                                }
+                            }
                     }
-                    Piece_enum::rook => {
-                        let mut v = Vec::<[usize; 2]>::new();
-                        for i in 0..=10 {
-                            if Board::in_bounds((x + i) as i32, (y) as i32) {
-                                let current = self.pieces[x + i][y];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x + i, y]);
-                                }
-                            }
-                            if Board::in_bounds((x - i) as i32, (y) as i32) {
-                                let current = self.pieces[x - i][y];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x - i, y]);
-                                }
-                            }
-                            if Board::in_bounds((x) as i32, (y + i) as i32) {
-                                let current = self.pieces[x][y + i];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x, y + i]);
-                                }
-                            }
-                            if Board::in_bounds((x) as i32, (y - i) as i32) {
-                                let current = self.pieces[x][y - i];
-                                if current == None
-                                    || (current != None
-                                        && current.unwrap().color
-                                            != self.pieces[x][y].unwrap().color)
-                                {
-                                    v.push([x, y - i]);
-                                }
-                            }
-                        }
-                        return Some(v);
-                    }
+                    },
                     Piece_enum::pawn => {
-                        let mut v = Vec::<[usize; 2]>::new();
-                        if self.pieces[x][y].unwrap().color == Color::white {
-                            if y as i32 - 1 >= 0 {}
-                            let current1 = self.pieces[x][y - 1];
-                            if y == 6 {
-                                let current = self.pieces[x][y - 2];
-                                if current == None && current1 == None {
-                                    v.push([x, y - 2]);
-                                }
-                            }
-                            if current1 == None {
-                                if Board::in_bounds(x as i32, y as i32 - 1) {
-                                    v.push([x, y - 1]);
-                                }
-                            }
+                        match selected_piece.color{
+                            Color::black => {
+                                    if Board::in_bounds(x, y+1){
+                                        let square = self.pieces[x as usize][(y+1) as usize];
+                                        if square == None{
+                                            v.push([x,y+1]);
+                                            if y==1{
+                                                let square = self.pieces[x as usize][(y+2) as usize];
+                                                if square == None{
+                                                    v.push([x,y+2]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    for i in [-1,1]{
+                                        if Board::in_bounds(x + i, y+1){
+                                            let square = self.pieces[(x + i) as usize][(y+1) as usize];
+                                            if square!= None && square.unwrap().color==Color::white{
+                                                v.push([x+i,y+1]);
+                                            }
+                                        }
+                                    }  
+                            },
+                            Color::white => {
 
-                            if x as i32 - 1 >= 0 {
-                                let diagonal = self.pieces[x - 1][y - 1];
-                                if diagonal != None && diagonal.unwrap().color == Color::black {
-                                    v.push([x - 1, y - 1]);
-                                }
-                            }
-                            if x + 1 < 8 {
-                                let diagonal2 = self.pieces[x + 1][y - 1];
-                                if diagonal2 != None && diagonal2.unwrap().color == Color::black {
-                                    v.push([x + 1, y - 1]);
-                                }
-                            }
-                        } else {
-                            if y + 1 < 8 {}
-                            let current1 = self.pieces[x][y + 1];
-                            if (y == 1) {
-                                let current = self.pieces[x][y + 2];
-                                if current == None && current1 == None {
-                                    v.push([x, y + 2]);
-                                }
-                            }
-                            if current1 == None {
-                                if Board::in_bounds(x as i32, y as i32 + 1) {
-                                    v.push([x, y + 1]);
-                                }
-                            }
+                                    if Board::in_bounds(x, y-1){
+                                        let square = self.pieces[x as usize][(y-1) as usize];
+                                        if square == None{
+                                            v.push([x,y-1]);
+                                            if y==6{
+                                                let square = self.pieces[x as usize][(y-2) as usize];
+                                                if square == None{
+                                                    v.push([x,y-2]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                
+                                    for i in [-1,1]{
+                                        if Board::in_bounds(x + i, y-1){
+                                            let square = self.pieces[(x + i) as usize][(y-1) as usize];
+                                            if square!= None && square.unwrap().color==Color::white{
+                                                v.push([x+i,y-1]);
+                                            }
+                                        }
+                                    }  
+                            },
+                        }
+                    },
+                    Piece_enum::queen => {
 
-                            if x as i32 - 1 >= 0 {
-                                let diagonal = self.pieces[x - 1][y + 1];
-                                if diagonal != None && diagonal.unwrap().color == Color::black {
-                                    v.push([x - 1, y + 1]);
+                        for j in [[1,0],[-1,0],[0,1],[0,-1]]{
+                            for i in 0..10{
+                                if Board::in_bounds(x + i*j[0], y + i*j[1]){
+                                    let square = self.pieces[(x+i*j[0]) as usize][(y+i*j[1]) as usize];
+                                    if square == None {
+                                        v.push([x+i*j[0],y+i*j[1]]);
+                                    }
+                                    if square != None{
+                                        if square.unwrap().color == selected_piece.color{
+                                            break;
+                                        }else{
+                                            v.push([x+i*j[0],y+i*j[1]]);
+                                            break;
+                                        }
+
+                                    }
                                 }
                             }
-                            if x + 1 < 8 {
-                                let diagonal2 = self.pieces[x + 1][y + 1];
-                                if diagonal2 != None && diagonal2.unwrap().color == Color::black {
-                                    v.push([x + 1, y + 1]);
+                }
+                        for j in [[1,1],[1,-1],[-1,1],[-1,-1]]{
+                            for i in 1..10{
+                                if Board::in_bounds(x + i*j[0], y + i*j[1]){
+                                    let square = self.pieces[(x+i*j[0]) as usize][(y+i*j[1]) as usize];
+                                    if square == None {
+                                        v.push([x+i*j[0],y+i*j[1]]);
+                                    }
+                                    if square != None{
+                                        if square.unwrap().color == selected_piece.color{
+                                            break;
+                                        }else{
+                                            v.push([x+i*j[0],y+i*j[1]]);
+                                            break;
+                                        }
+
+                                    }
                                 }
                             }
                         }
-                        return Some(v);
-                    }
-                }
+            },
+        }
+                return Some(v);
             }
+
         } else {
             return None;
         }
     }
     pub fn move_piece(&mut self,x:usize,y:usize,dx:usize,dy:usize){
-        self.pieces[dx][dy] = self.pieces[x][y];
-        self.pieces[x][y] = None;
+        self.pieces[dx][dy] = self.pieces[x as usize][y as usize];
+        self.pieces[x as usize][y as usize] = None;
     }
-    fn in_bounds(x: i32, y: i32) -> bool {
-        return x >= 0 && x < 8 && y >= 0 && x < 8;
+    pub fn in_bounds(x: i32, y: i32) -> bool {
+        return x >= 0 && x < 8 && y >= 0 && y < 8;
     }
 }
