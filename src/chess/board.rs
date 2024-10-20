@@ -79,7 +79,7 @@ impl Board {
                                     let square = self.pieces[(x+i) as usize][(y+j) as usize];
                                     if square == None 
                                     || (square !=None && square.unwrap().color!= selected_piece.color)  {
-                                        v.push([x+i,y+i]);
+                                        v.push([x+i,y+j]);
                                     }
                                 }
                             }
@@ -122,7 +122,7 @@ impl Board {
                     },
                     Piece_enum::rook=> {
                         for j in [[1,0],[-1,0],[0,1],[0,-1]]{
-                            for i in 0..10{
+                            for i in 1..10{
                                 if Board::in_bounds(x + i*j[0], y + i*j[1]){
                                     let square = self.pieces[(x+i*j[0]) as usize][(y+i*j[1]) as usize];
                                     if square == None {
@@ -183,7 +183,7 @@ impl Board {
                                     for i in [-1,1]{
                                         if Board::in_bounds(x + i, y-1){
                                             let square = self.pieces[(x + i) as usize][(y-1) as usize];
-                                            if square!= None && square.unwrap().color==Color::white{
+                                            if square!= None && square.unwrap().color==Color::black{
                                                 v.push([x+i,y-1]);
                                             }
                                         }
@@ -194,7 +194,7 @@ impl Board {
                     Piece_enum::queen => {
 
                         for j in [[1,0],[-1,0],[0,1],[0,-1]]{
-                            for i in 0..10{
+                            for i in 1..10{
                                 if Board::in_bounds(x + i*j[0], y + i*j[1]){
                                     let square = self.pieces[(x+i*j[0]) as usize][(y+i*j[1]) as usize];
                                     if square == None {
@@ -240,8 +240,8 @@ impl Board {
             return None;
         }
     }
-    pub fn move_piece(&mut self,x:usize,y:usize,dx:usize,dy:usize){
-        self.pieces[dx][dy] = self.pieces[x as usize][y as usize];
+    pub fn move_piece(&mut self,x:i32,y:i32,dx:i32,dy:i32){
+        self.pieces[dx as usize][dy as usize] = self.pieces[x as usize][y as usize];
         self.pieces[x as usize][y as usize] = None;
     }
     pub fn in_bounds(x: i32, y: i32) -> bool {

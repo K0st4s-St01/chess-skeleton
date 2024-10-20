@@ -12,6 +12,7 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
+use sdl2::sys::FillStippled;
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -39,6 +40,12 @@ pub fn main() {
     let mut board_x = 9;
     let mut board_y = 9;
 
+
+    let mut board_move_x = 9;
+    let mut board_move_y = 9;
+
+    let mut first_click = false;
+
     let mut v:Vec<[i32;2]>=Vec::<[i32;2]>::new();
 
 
@@ -52,13 +59,26 @@ pub fn main() {
                 },
                 Event::MouseButtonDown { timestamp, window_id, which, mouse_btn, clicks, x, y } => {
                     if mouse_btn == MouseButton::Left{
-                        board_x = (x/64) ;
-                        board_y = (y/64) ;
                         println!("{} {}",board_x,board_y);
-                        if(Board::in_bounds(board_x as i32, board_y as i32)){
-                            let select = board.select(board_x, board_y);
-                            if select != None{
-                                v = select.unwrap();
+                        if first_click {
+                            board_move_x = (x/64) ;
+                            board_move_y = (y/64) ;
+                            for square in &v{
+                                if board_move_x == square[0] && board_move_y == square[1]{
+                                    board.move_piece(board_x, board_y, board_move_x, board_move_y);
+                                }
+                            }
+                            first_click = false;
+                        }
+                        if !first_click{
+                            board_x = (x/64) ;
+                            board_y = (y/64) ;
+                            if(Board::in_bounds(board_x as i32, board_y as i32)){
+                                let select = board.select(board_x, board_y);
+                                if select != None{
+                                    v = select.unwrap();
+                                    first_click = true;
+                                }
                             }
                         }
                     }
@@ -75,9 +95,11 @@ pub fn main() {
                 let _ =canvas.fill_rect(Rect::new(i*64+2,j*64+2,60,60));
             }
         }
-        for value in &v{
-            canvas.set_draw_color(Color::RGB(0, 255, 255));
-            canvas.fill_rect(Rect::new(value[0]  *64,value[1] *64,64,64));
+        if(first_click){
+            for value in &v{
+                canvas.set_draw_color(Color::RGB(0, 255, 255));
+                canvas.fill_rect(Rect::new(value[0]  *64,value[1] *64,64,64));
+            }
         }
         for i in 0..8{
             for j in 0..8{
